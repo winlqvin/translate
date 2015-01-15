@@ -50,4 +50,29 @@ module TranslateHelper
     return nil unless method
     link_to_function 'Auto Translate', "#{method}('#{key}', \"#{escape_javascript(text)}\", '#{from}', '#{to}')", :style => 'padding: 0; margin: 0;'
   end
+
+
+  # Diese Methode wurde ab Rails 4.1 ausgebaut - darum wurde sie in diesen Helper kopiert
+  def button_to_function(name, function=nil, html_options={})
+    message = "button_to_function is deprecated and will be removed from Rails 4.1. We recommend using Unobtrusive JavaScript instead. " +
+      "See http://guides.rubyonrails.org/working_with_javascript_in_rails.html#unobtrusive-javascript"
+    ActiveSupport::Deprecation.warn message
+
+    onclick = "#{"#{html_options[:onclick]}; " if html_options[:onclick]}#{function};"
+
+    tag(:input, html_options.merge(:type => 'button', :value => name, :onclick => onclick))
+  end
+
+  # Diese Methode wurde ab Rails 4.1 ausgebaut - darum wurde sie in diesen Helper kopiert
+  def link_to_function(name, function, html_options={})
+    message = "link_to_function is deprecated and will be removed from Rails 4.1. We recommend using Unobtrusive JavaScript instead. " +
+      "See http://guides.rubyonrails.org/working_with_javascript_in_rails.html#unobtrusive-javascript"
+    ActiveSupport::Deprecation.warn message
+
+    onclick = "#{"#{html_options[:onclick]}; " if html_options[:onclick]}#{function}; return false;"
+    href = html_options[:href] || '#'
+
+    content_tag(:a, name, html_options.merge(:href => href, :onclick => onclick))
+  end
+
 end
