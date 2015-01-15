@@ -28,7 +28,7 @@ class TranslateController < ActionController::Base
     Translate::Log.new(@from_locale, @to_locale, params[:key].keys).write_to_file
     force_init_translations # Force reload from YAML file
     flash[:notice] = "Translations stored"
-    redirect_to params.slice(:filter, :sort_by, :key_type, :key_pattern, :text_type, :text_pattern, :translated_text_type, :translated_text_pattern).merge({:action => :index})
+    redirect_to translate_path params.slice(:filter, :sort_by, :key_type, :key_pattern, :text_type, :text_pattern, :translated_text_type, :translated_text_pattern)
   end
 
   # GET /translate/reload
@@ -73,7 +73,7 @@ class TranslateController < ActionController::Base
     raise StandardError, "to_locales expected to be an array" if to_loc.class != Array
     to_loc
   end
-  helper_method :to_locales 
+  helper_method :to_locales
 
   def filter_by_translated_or_changed
     params[:filter] ||= 'all'
@@ -85,10 +85,10 @@ class TranslateController < ActionController::Base
       when 'translated'
         lookup(@to_locale, key).blank?
       when 'changed'
-        lookup(@from_locale, key).to_s == lookup(@to_locale, key).to_s 
+        lookup(@from_locale, key).to_s == lookup(@to_locale, key).to_s
       when 'list_changed'
-        fr = lookup(@from_locale, key).to_s.squish  
-        to = lookup(@to_locale, key).to_s.squish 
+        fr = lookup(@from_locale, key).to_s.squish
+        to = lookup(@to_locale, key).to_s.squish
         if fr.downcase != to.downcase
           p '--'
           p 'c:' + fr
