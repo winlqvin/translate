@@ -1,11 +1,11 @@
 class TranslateController < ActionController::Base
   # It seems users with active_record_store may get a "no :secret given" error if we don't disable csrf protection,
-  skip_before_filter :verify_authenticity_token
+  skip_before_action :verify_authenticity_token
 
   layout 'translate'
 
-  before_filter :init_translations
-  before_filter :set_locale
+  before_action :init_translations
+  before_action :set_locale
 
   # GET /translate
   def index
@@ -27,17 +27,18 @@ class TranslateController < ActionController::Base
     Translate::Storage.new(@to_locale).write_to_file
     Translate::Log.new(@from_locale, @to_locale, params[:key].keys).write_to_file
     force_init_translations # Force reload from YAML file
-    flash[:notice] = "Translations stored"
+    flash[:notice] = 'Translations stored'
     redirect_to translate_path params.slice(:filter, :sort_by, :key_type, :key_pattern, :text_type, :text_pattern, :translated_text_type, :translated_text_pattern)
   end
 
   # GET /translate/reload
   def reload
     Translate::Keys.files = nil
-    redirect_to :action => 'index'
+    redirect_to action: 'index'
   end
 
   private
+
   def initialize_keys
     @files = Translate::Keys.files
     @keys = (@files.keys.map(&:to_s) + Translate::Keys.new.i18n_keys(@from_locale)).uniq
@@ -50,7 +51,7 @@ class TranslateController < ActionController::Base
   end
 
   def page_title
-    "Translate"
+    'Translate'
   end
 
   def lookup(locale, key)
@@ -62,7 +63,8 @@ class TranslateController < ActionController::Base
     # Attempt to get the list of locale from configuration
     from_loc = Rails.application.config.from_locales if Rails.application.config.respond_to?(:from_locales)
     return I18n.available_locales if from_loc.blank?
-    raise StandardError, "from_locale expected to be an array" if from_loc.class != Array
+    raise StandardError, 'from_locale expected to be an array' if from_loc.class != Array
+
     from_loc
   end
   helper_method :from_locales
@@ -70,7 +72,8 @@ class TranslateController < ActionController::Base
   def to_locales
     to_loc = Rails.application.config.to_locales if Rails.application.config.respond_to?(:to_locales)
     return I18n.available_locales if to_loc.blank?
-    raise StandardError, "to_locales expected to be an array" if to_loc.class != Array
+    raise StandardError, 'to_locales expected to be an array' if to_loc.class != Array
+
     to_loc
   end
   helper_method :to_locales
@@ -78,6 +81,7 @@ class TranslateController < ActionController::Base
   def filter_by_translated_or_changed
     params[:filter] ||= 'all'
     return if params[:filter] == 'all'
+
     @keys.reject! do |key|
       case params[:filter]
       when 'untranslated'
@@ -103,11 +107,12 @@ class TranslateController < ActionController::Base
 
   def filter_by_key_pattern
     return if params[:key_pattern].blank?
+
     @keys.reject! do |key|
       case params[:key_type]
-      when "starts_with"
+      when 'starts_with'
         !key.starts_with?(params[:key_pattern])
-      when "contains"
+      when 'contains'
         key.index(params[:key_pattern]).nil?
       else
         raise "Unknown key_type '#{params[:key_type]}'"
@@ -117,6 +122,7 @@ class TranslateController < ActionController::Base
 
   def filter_by_text_pattern
     return if params[:text_pattern].blank?
+
     @keys.reject! do |key|
       case params[:text_type]
       when 'contains'
@@ -131,11 +137,12 @@ class TranslateController < ActionController::Base
 
   def filter_by_translated_text_pattern
     return if params[:translated_text_pattern].blank?
+
     @keys.reject! do |key|
       case params[:translated_text_type]
-      when 'contains' then
+      when 'contains'
         !lookup(@to_locale, key).present? || !lookup(@to_locale, key).to_s.downcase.index(params[:translated_text_pattern].downcase)
-      when 'equals' then
+      when 'equals'
         !lookup(@to_locale, key).present? || lookup(@to_locale, key).to_s.downcase != params[:translated_text_pattern].downcase
       else
         raise "Unknown translated_text_type '#{params[:translated_text_type]}'"
@@ -144,11 +151,11 @@ class TranslateController < ActionController::Base
   end
 
   def sort_keys
-    params[:sort_by] ||= "key"
+    params[:sort_by] ||= 'key'
     case params[:sort_by]
-    when "key"
+    when 'key'
       @keys.sort!
-    when "text"
+    when 'text'
       @keys.sort! do |key1, key2|
         if lookup(@from_locale, key1).present? && lookup(@from_locale, key2).present?
           lookup(@from_locale, key1).to_s.downcase <=> lookup(@from_locale, key2).to_s.downcase
@@ -203,7 +210,7 @@ class TranslateController < ActionController::Base
   end
 
   def process_array_parameters(parameter)
-    reconstructed_hash = Hash.new
+    reconstructed_hash = {}
 
     parameter.each do |key, value|
       if value.is_a?(String)
